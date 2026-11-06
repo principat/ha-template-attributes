@@ -62,12 +62,19 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
   „Änderungen verwerfen“ setzt zurück. Bei Validierungsfehlern wird nichts gespeichert und der
   Fehler am betroffenen Abschnitt angezeigt.
 - **F-14** Die Oberfläche ist deutsch und englisch (nach HA-Sprache).
-- **F-15** Gibt es mehrere Helfer, kann der zu bearbeitende gewählt werden; es gibt einen Link zu
-  den Einstellungen des Standard-Sensors (F-3).
-- **F-20** Die „Optionen“ des Helfers enthalten einen Link „Attribute verwalten“, der direkt das
-  Panel mit **diesem** Helfer öffnet (nicht nur den ersten). Ob das Panel in der Seitenleiste
-  erscheint, verwaltet jeder Nutzer selbst über die HA-Seitenleisten-Einstellungen; es gibt dafür
-  keine eigene Option der Integration.
+- **F-15** Das Panel ist zweigeteilt: **links** die Liste aller Helfer, **rechts** daneben die
+  Bearbeitung des gewählten Helfers (Abschnitte, Hinzufügen, Speichern). Es gibt einen Link zu den
+  Einstellungen des Standard-Sensors (F-3). Auf schmalen Bildschirmen steht die Liste über dem Editor.
+- **F-21** Die Helfer-Liste ist **nach Name sortiert** und hat **oben ein Suchfeld**: Teile des
+  Namens (ohne Beachtung der Groß-/Kleinschreibung) filtern die Liste sofort. Ohne Treffer erscheint
+  ein Hinweis. Beim Wechsel des Helfers mit ungespeicherten Änderungen wird nachgefragt.
+- **F-22** Templates (State und Attribute) werden mit dem **Standard-Template-Editor von Home
+  Assistant** bearbeitet (Syntax-Hervorhebung, Autovervollständigung von Entitäten und Funktionen),
+  nicht in einem einfachen Textfeld.
+- **F-20** Die „Optionen“ des Helfers enthalten **unterhalb des Formulars** einen gut sichtbaren
+  Link „Attribute verwalten“, der direkt das Panel mit **diesem** Helfer öffnet (nicht nur den
+  ersten). Ob das Panel in der Seitenleiste erscheint, verwaltet jeder Nutzer selbst über die
+  HA-Seitenleisten-Einstellungen; es gibt dafür keine eigene Option der Integration.
 
 ### 2.4 Verhalten des Sensors
 
@@ -114,7 +121,14 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
   Abschnittstitel wird aus `hass.states[entity_id]` gelesen (F-12). Texte DE/EN im Skript.
   Registrierung schlägt nie auf die Integration durch. Deep-Link (F-20): `/template-attributes?entry=<entry_id>`;
   das Panel liest den Parameter beim Start und fällt bei unbekannter ID auf den ersten Helfer zurück.
-  Der Options-Flow liefert die URL als Platzhalter `panel_url` an die Beschreibung.
+  Der Options-Flow liefert die URL als Platzhalter `panel_url`; der Link steht als Markdown in der
+  Feldbeschreibung (`data_description`) des letzten Formularfelds, damit er unter dem Formular
+  erscheint (eine Flow-Beschreibung steht immer oberhalb).
+  Layout (F-15, F-21): CSS-Grid mit Liste (`aside`) und Editor; Helfer werden im Panel nach Titel
+  sortiert. Template-Editor (F-22): `<ha-selector>` mit `selector: {template: {}}` (lädt
+  `ha-code-editor`); das Panel stößt das Laden von `ha-selector` selbst an (`loadCardHelpers` +
+  Config-Element einer Standard-Karte), weil ein eigenständiges Panel es nicht mitbringt. Ist
+  `ha-selector` nicht verfügbar, fällt das Panel auf ein `textarea` zurück.
 - Übersetzungen: `strings.json` = `translations/en.json`, `translations/de.json`
   schlüsselgleich (ICU MessageFormat).
 
@@ -123,7 +137,7 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 - `tests/` (`python -m pytest`): gemockte HA-Instanz – Flow, Sensor, Websocket-API, Übersetzungen.
 - `tests_e2e/` (`python -m pytest tests_e2e`): echte `hass`-Instanz + echtes Frontend +
   Playwright (Chromium); legt einen Helfer über die Flow-API an und prüft das Panel
-  (F-6, F-7, F-10, F-11, F-13, F-20). Screenshots in `tests_e2e/screenshots/` nach jedem Lauf ansehen.
+  (F-6, F-7, F-10, F-11, F-13, F-15, F-20, F-21, F-22). Screenshots in `tests_e2e/screenshots/` nach jedem Lauf ansehen.
 - Beides läuft im Devcontainer (`.devcontainer/`).
 
 ### 4.3 CI/CD
@@ -135,5 +149,4 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 ## 5. Offene Punkte / Ideen
 
 - Live-Vorschau des Werts schon während der Bearbeitung (Testrender vor dem Speichern).
-- Template-Editor mit Syntax-Highlighting (`ha-code-editor`) statt Textarea.
 - Anlegen eines neuen Helfers direkt im Panel.

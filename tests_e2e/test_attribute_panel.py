@@ -2,8 +2,9 @@
 
 Mocked tests cannot show what the user sees. This one creates a helper through the real config
 flow API, opens the sidebar panel and checks the behavior that was asked for: sections are closed,
-titles show "name = value", attributes are added by name and removed with the trash icon.
-Screenshots land in tests_e2e/screenshots (open them after a run).
+titles show "name = value", attributes are added by name and removed with the trash icon, helpers
+are listed (sorted, searchable) next to the editor, templates are edited with HA's own template
+editor. Screenshots land in tests_e2e/screenshots (open them after a run).
 """
 from __future__ import annotations
 
@@ -32,32 +33,65 @@ def _api(page, method: str, path: str, body: dict | None = None):
     )
 
 
-@pytest.fixture
-def helper(page, ha_base_url):
-    """A fresh helper per test, removed afterwards."""
-    page.goto(ha_base_url + "/")
-    page.wait_for_load_state("networkidle")
+def _create_helper(page, name: str, state_template: str) -> str:
     flow = _api(page, "POST", "/api/config/config_entries/flow", {"handler": "template_attributes"})
     result = _api(
         page,
         "POST",
         f"/api/config/config_entries/flow/{flow['flow_id']}",
-        {"name": "E2E Demo", "state_template": "{{ 40 + 2 }}"},
+        {"name": name, "state_template": state_template},
     )
     assert result["type"] == "create_entry", result
-    entry_id = result["result"]["entry_id"]
+    return result["result"]["entry_id"]
+
+
+@pytest.fixture
+def helper(page, ha_base_url):
+    """A fresh helper per test, removed afterwards."""
+    page.goto(ha_base_url + "/")
+    page.wait_for_load_state("networkidle")
+    entry_id = _create_helper(page, "E2E Demo", "{{ 40 + 2 }}")
     yield entry_id
     _api(page, "DELETE", f"/api/config/config_entries/entry/{entry_id}")
 
 
-def _open_panel(page):
-    page.goto(PANEL)
+@pytest.fixture
+def second_helper(page, helper):
+    """A second helper, so that "the first one" and "the linked one" differ."""
+    entry_id = _create_helper(page, "Zweiter Helfer", "{{ 7 }}")
+    yield entry_id
+    _api(page, "DELETE", f"/api/config/config_entries/entry/{entry_id}")
+
+
+def _open_panel(page, query: str = ""):
+    page.goto(PANEL + query)
     page.wait_for_selector("template-attributes-panel details")
+
+
+def _editor(page, key: str):
+    """The template editor of a section: HA's code editor (CodeMirror), textarea as fallback."""
+    section = f"details[data-section='{key}']"
+    return page.locator(f"{section} .cm-content, {section} textarea").first
+
+
+def _set_template(page, key: str, text: str) -> None:
+    editor = _editor(page, key)
+    editor.click()
+    editor.fill(text)
+
+
+def _selected(page):
+    return page.locator("button.item[aria-current='true']")
 
 
 def test_add_edit_save_and_delete_attributes(page, helper):
     _open_panel(page)
     SHOTS.mkdir(exist_ok=True)
+
+    # the template editor is HA's own (code editor), not a bare textarea
+    page.locator("details[data-section='__state__'] summary").click()
+    assert page.locator("details[data-section='__state__'] .cm-content").count() == 1
+    page.locator("details[data-section='__state__'] summary").click()
 
     # the standard sensor is a collapsed section titled "<label> = <live state>"
     state = page.locator("details[data-section='__state__']")
@@ -69,12 +103,12 @@ def test_add_edit_save_and_delete_attributes(page, helper):
     page.get_by_role("button", name="Add attribute").click()
     section = page.locator("details[data-section='double']")
     assert section.get_attribute("open") is not None
-    section.locator("textarea").fill("{{ state * 2 }}")
+    _set_template(page, "double", "{{ state * 2 }}")
 
     # a second one; the input row is below the list again
     page.get_by_label("Name of the new attribute").fill("note")
     page.get_by_role("button", name="Add attribute").click()
-    page.locator("details[data-section='note'] textarea").fill("hello")
+    _set_template(page, "note", "hello")
     page.screenshot(path=str(SHOTS / "panel-editing.png"))
 
     page.get_by_role("button", name="Save", exact=True).click()
@@ -108,7 +142,7 @@ def test_invalid_name_and_template_are_reported(page, helper):
 
     page.get_by_label("Name of the new attribute").fill("broken")
     page.get_by_role("button", name="Add attribute").click()
-    page.locator("details[data-section='broken'] textarea").fill("{{ 1 + ")
+    _set_template(page, "broken", "{{ 1 + ")
     page.get_by_role("button", name="Save", exact=True).click()
     page.wait_for_selector("text=Template is not valid")
     # the section with the problem is opened so the message is visible
@@ -116,24 +150,30 @@ def test_invalid_name_and_template_are_reported(page, helper):
     page.screenshot(path=str(SHOTS / "panel-error.png"))
 
 
-def _create_helper(page, name: str, state_template: str) -> str:
-    flow = _api(page, "POST", "/api/config/config_entries/flow", {"handler": "template_attributes"})
-    result = _api(
-        page,
-        "POST",
-        f"/api/config/config_entries/flow/{flow['flow_id']}",
-        {"name": name, "state_template": state_template},
-    )
-    assert result["type"] == "create_entry", result
-    return result["result"]["entry_id"]
+def test_helpers_are_listed_sorted_and_searchable(page, helper, second_helper):
+    # created in the order E2E Demo, Zweiter Helfer - the list is sorted by name regardless
+    _open_panel(page)
+    items = page.locator("button.item")
+    assert items.all_inner_texts() == ["E2E Demo", "Zweiter Helfer"]
+    assert _selected(page).inner_text() == "E2E Demo"
+    SHOTS.mkdir(exist_ok=True)
+    page.wait_for_selector("#ha-launch-screen, ha-launch-screen", state="detached")  # splash gone
+    page.screenshot(path=str(SHOTS / "panel-list.png"))
 
+    # parts of the name filter the list, case-insensitive
+    page.get_by_label("Search helpers").fill("zwei")
+    assert items.all_inner_texts() == ["Zweiter Helfer"]
+    page.get_by_label("Search helpers").fill("e2e")
+    assert items.all_inner_texts() == ["E2E Demo"]
+    page.get_by_label("Search helpers").fill("nothing like this")
+    assert items.count() == 0
+    page.wait_for_selector("text=No helper matches the search.")
 
-@pytest.fixture
-def second_helper(page, helper):
-    """A second helper, so that "the first one" and "the linked one" differ."""
-    entry_id = _create_helper(page, "Zweiter Helfer", "{{ 7 }}")
-    yield entry_id
-    _api(page, "DELETE", f"/api/config/config_entries/entry/{entry_id}")
+    # clicking an entry shows that helper in the editor next to the list
+    page.get_by_label("Search helpers").fill("")
+    page.locator(f"button.item[data-helper='{second_helper}']").click()
+    assert _selected(page).inner_text() == "Zweiter Helfer"
+    assert "7" in page.locator("details[data-section='__state__'] summary").inner_text()
 
 
 def test_options_dialog_link_opens_the_panel_with_that_helper(page, second_helper):
@@ -145,14 +185,20 @@ def test_options_dialog_link_opens_the_panel_with_that_helper(page, second_helpe
 
     link = page.get_by_role("link", name="Manage attributes")
     link.wait_for()
+    link.scroll_into_view_if_needed()
     page.screenshot(path=str(SHOTS / "options-dialog.png"))
     assert second_helper in link.get_attribute("href")
+    # the link sits below the form fields, not above them
+    last_field_text = page.get_by_text("How often the state and the attributes")
+    assert link.bounding_box()["y"] > last_field_text.bounding_box()["y"]
+    # and above the submit button, i.e. inside the form area
+    assert link.bounding_box()["y"] < page.get_by_role("button", name="Submit").bounding_box()["y"]
     link.click()
 
     # the panel opens with the helper of the dialog, not with the first one
     page.wait_for_selector("template-attributes-panel details")
     assert page.url.endswith(f"/template-attributes?entry={second_helper}")
-    assert page.get_by_role("combobox", name="Helper").input_value() == second_helper
+    assert _selected(page).inner_text() == "Zweiter Helfer"
     assert "7" in page.locator("details[data-section='__state__'] summary").inner_text()
     page.screenshot(path=str(SHOTS / "panel-from-options-link.png"))
 
@@ -162,13 +208,12 @@ def test_deep_link_preselects_the_helper(page, helper):
     second = _create_helper(page, "Zweiter Helfer", "{{ 7 }}")
     try:
         # without the parameter the first helper is shown, with it the linked one
-        page.goto(f"{PANEL}?entry={second}")
-        page.wait_for_selector("template-attributes-panel details")
-        assert page.get_by_role("combobox", name="Helper").input_value() == second
+        _open_panel(page, f"?entry={second}")
+        assert _selected(page).inner_text() == "Zweiter Helfer"
         assert "7" in page.locator("details[data-section='__state__'] summary").inner_text()
         # an unknown id falls back instead of showing an empty panel
-        page.goto(f"{PANEL}?entry=does-not-exist")
-        page.wait_for_selector("template-attributes-panel details")
+        _open_panel(page, "?entry=does-not-exist")
+        assert _selected(page).inner_text() == "E2E Demo"
     finally:
         _api(page, "DELETE", f"/api/config/config_entries/entry/{second}")
 

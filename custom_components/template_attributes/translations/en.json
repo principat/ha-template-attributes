@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "Edit Template Attributes helper",
-        "description": "Settings of the standard sensor. [Manage attributes]({panel_url}) of this helper in the **Template Attributes** panel.",
+        "description": "Settings of the standard sensor. The custom attributes are edited in the **Template Attributes** panel (link below the form).",
         "data": {
           "state_template": "State template",
           "unit_of_measurement": "Unit of measurement (optional)",
@@ -32,6 +32,9 @@
           "state_class": "State class (optional)",
           "icon": "Icon (optional)",
           "update_interval_minutes": "Recalculation interval (minutes)"
+        },
+        "data_description": {
+          "update_interval_minutes": "How often the state and the attributes are recalculated in addition to changes of the entities used in the templates.\n\n### [Manage attributes of this helper →]({panel_url})"
         }
       }
     },

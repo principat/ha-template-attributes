@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "Template-Attributes-Helfer bearbeiten",
-        "description": "Einstellungen des Standard-Sensors. [Attribute verwalten]({panel_url}) dieses Helfers im Panel **Template Attributes**.",
+        "description": "Einstellungen des Standard-Sensors. Die eigenen Attribute werden im Panel **Template Attributes** bearbeitet (Link unter dem Formular).",
         "data": {
           "state_template": "State-Template",
           "unit_of_measurement": "Einheit (optional)",
@@ -32,6 +32,9 @@
           "state_class": "Statusklasse (optional)",
           "icon": "Icon (optional)",
           "update_interval_minutes": "Neuberechnungsintervall (Minuten)"
+        },
+        "data_description": {
+          "update_interval_minutes": "Wie oft Zustand und Attribute zusätzlich zu Änderungen der in den Templates verwendeten Entitäten neu berechnet werden.\n\n### [Attribute dieses Helfers verwalten →]({panel_url})"
         }
       }
     },

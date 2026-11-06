@@ -17,7 +17,10 @@ const TRASH =
 const TEXTS = {
   en: {
     title: "Template Attributes",
-    helper: "Helper",
+    helper: "Helpers",
+    search: "Search helpers",
+    noMatch: "No helper matches the search.",
+    confirmSwitch: "Discard the unsaved changes of this helper?",
     none: "No Template Attributes helper exists yet.",
     create: "Create one under Settings → Devices & services → Helpers.",
     stateSection: "State",
@@ -42,6 +45,9 @@ const TEXTS = {
   de: {
     title: "Template Attributes",
     helper: "Helfer",
+    search: "Helfer suchen",
+    noMatch: "Kein Helfer passt zur Suche.",
+    confirmSwitch: "Die ungespeicherten Änderungen dieses Helfers verwerfen?",
     none: "Es gibt noch keinen Template-Attributes-Helfer.",
     create: "Lege einen unter Einstellungen → Geräte & Dienste → Helfer an.",
     stateSection: "Zustand",
@@ -74,7 +80,20 @@ const STYLE = `
   :host([narrow]) header button.menu { display: block; }
   header h1 { font-size: 20px; font-weight: 400; margin: 0; flex: 1; }
   main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; max-width: 1280px;
+            margin: 0 auto; padding: 16px; align-items: start; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+  aside input.search { width: 100%; }
+  ul.list { list-style: none; margin: 8px 0 0; padding: 0; max-height: calc(100vh - 150px); overflow: auto; }
+  ul.list button.item { display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0;
+            border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
+  ul.list button.item:hover { background: var(--secondary-background-color, rgba(127,127,127,.12)); }
+  ul.list button.item[aria-current="true"] { background: color-mix(in srgb, var(--primary-color) 16%, transparent);
+            font-weight: 500; }
+  .empty { color: var(--secondary-text-color); padding: 8px 12px; }
   .toolbar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .toolbar strong { font-size: 18px; }
+  ha-selector { display: block; }
   .toolbar a { color: var(--primary-color); }
   select, input, textarea { font: inherit; color: inherit; background: var(--card-background-color, #fff);
            border: 1px solid var(--divider-color); border-radius: 4px; padding: 8px; box-sizing: border-box; }
@@ -126,6 +145,7 @@ class TemplateAttributesPanel extends HTMLElement {
     this._addError = "";
     this._message = null;
     this._loadError = false;
+    this._filter = "";
   }
 
   set hass(hass) {
@@ -149,10 +169,29 @@ class TemplateAttributesPanel extends HTMLElement {
       this._helpers = [];
       this._loadError = true;
     }
+    this._helpers.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+    await this._ensureEditor();
     const known = this._helpers.find((h) => h.entry_id === this._selected);
     if (!keepSelection || !known) this._selected = this._helpers[0]?.entry_id ?? null;
     this._resetDraft();
     this._render();
+  }
+
+  /** Make HA's own template editor (ha-selector -> ha-code-editor) available in this standalone panel. */
+  async _ensureEditor() {
+    try {
+      if (!customElements.get("ha-selector") && window.loadCardHelpers) {
+        await window.loadCardHelpers();
+        // the editor of a stock card pulls in ha-form and with it ha-selector
+        await customElements.get("hui-entities-card")?.getConfigElement?.();
+      }
+      await Promise.race([
+        customElements.whenDefined("ha-selector"),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+    } catch (err) {
+      // fall back to a plain textarea
+    }
   }
 
   _helper() { return this._helpers?.find((h) => h.entry_id === this._selected); }
@@ -210,17 +249,27 @@ class TemplateAttributesPanel extends HTMLElement {
     header.append(menu, h1);
     root.append(header);
 
-    const main = document.createElement("main");
-    root.append(main);
-
-    if (this._loadError) return this._banner(main, "err", t.loadError);
+    if (this._loadError) {
+      const m = document.createElement("main");
+      root.append(m);
+      return this._banner(m, "err", t.loadError);
+    }
     if (!this._helpers) return;
     if (!this._helpers.length) {
+      const m = document.createElement("main");
       const p = document.createElement("p");
       p.textContent = `${t.none} ${t.create}`;
-      main.append(p);
+      m.append(p);
+      root.append(m);
       return;
     }
+
+    const layout = document.createElement("div");
+    layout.className = "layout";
+    layout.append(this._renderList());
+    const main = document.createElement("section");
+    layout.append(main);
+    root.append(layout);
 
     this._renderToolbar(main);
     if (this._message) this._banner(main, this._message.kind, this._message.text);
@@ -251,32 +300,64 @@ class TemplateAttributesPanel extends HTMLElement {
     this._focusNew = null;
   }
 
+  _renderList() {
+    const t = this._t;
+    const aside = document.createElement("aside");
+    const search = document.createElement("input");
+    search.className = "search";
+    search.type = "search";
+    search.placeholder = t.search;
+    search.setAttribute("aria-label", t.search);
+    search.value = this._filter;
+    const list = document.createElement("ul");
+    list.className = "list";
+    list.setAttribute("aria-label", t.helper);
+    search.addEventListener("input", () => { this._filter = search.value; this._fillList(list); });
+    aside.append(search, list);
+    this._fillList(list);
+    return aside;
+  }
+
+  /** The helper list: sorted by name (see _load), filtered by parts of the name. */
+  _fillList(list) {
+    const needle = this._filter.trim().toLowerCase();
+    list.innerHTML = "";
+    const shown = this._helpers.filter((h) => h.title.toLowerCase().includes(needle));
+    shown.forEach((h) => {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      button.className = "item";
+      button.dataset.helper = h.entry_id;
+      button.textContent = h.title;
+      if (h.entry_id === this._selected) button.setAttribute("aria-current", "true");
+      button.addEventListener("click", () => this._select(h.entry_id));
+      li.append(button);
+      list.append(li);
+    });
+    if (!shown.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = this._t.noMatch;
+      list.append(li);
+    }
+  }
+
+  _select(entryId) {
+    if (entryId === this._selected) return;
+    if (this._dirty && !window.confirm(this._t.confirmSwitch)) return;
+    this._selected = entryId;
+    this._message = null;
+    this._resetDraft();
+    this._render();
+  }
+
   _renderToolbar(main) {
     const t = this._t;
     const bar = document.createElement("div");
     bar.className = "toolbar";
-    if (this._helpers.length > 1) {
-      const select = document.createElement("select");
-      select.setAttribute("aria-label", t.helper);
-      this._helpers.forEach((h) => {
-        const opt = document.createElement("option");
-        opt.value = h.entry_id;
-        opt.textContent = h.title;
-        opt.selected = h.entry_id === this._selected;
-        select.append(opt);
-      });
-      select.addEventListener("change", () => {
-        this._selected = select.value;
-        this._message = null;
-        this._resetDraft();
-        this._render();
-      });
-      bar.append(select);
-    } else {
-      const strong = document.createElement("strong");
-      strong.textContent = this._helper().title;
-      bar.append(strong);
-    }
+    const strong = document.createElement("strong");
+    strong.textContent = this._helper().title;
+    bar.append(strong);
     const link = document.createElement("a");
     link.href = "/config/integrations/integration/template_attributes";
     link.textContent = t.settings;
@@ -331,12 +412,7 @@ class TemplateAttributesPanel extends HTMLElement {
     const p = document.createElement("p");
     p.className = "hint";
     p.textContent = hint;
-    const area = document.createElement("textarea");
-    area.value = template;
-    area.spellcheck = false;
-    area.setAttribute("aria-label", label);
-    area.addEventListener("input", () => onInput(area.value));
-    body.append(p, area);
+    body.append(p, this._templateEditor(label, template, onInput));
     if (error) {
       const err = document.createElement("div");
       err.className = "error";
@@ -345,6 +421,28 @@ class TemplateAttributesPanel extends HTMLElement {
     }
     details.append(body);
     return details;
+  }
+
+  /** HA's standard template editor (syntax highlighting, entity autocomplete); textarea as fallback. */
+  _templateEditor(label, value, onInput) {
+    if (customElements.get("ha-selector")) {
+      const el = document.createElement("ha-selector");
+      el.hass = this._hass;
+      el.selector = { template: {} };
+      el.value = value;
+      el.addEventListener("value-changed", (ev) => {
+        ev.stopPropagation();
+        onInput(ev.detail.value ?? "");
+      });
+      el.setAttribute("aria-label", label);
+      return el;
+    }
+    const area = document.createElement("textarea");
+    area.value = value;
+    area.spellcheck = false;
+    area.setAttribute("aria-label", label);
+    area.addEventListener("input", () => onInput(area.value));
+    return area;
   }
 
   _renderAddRow() {
@@ -412,7 +510,9 @@ class TemplateAttributesPanel extends HTMLElement {
 
     this._draft.attributes.push({ name, template: "", open: true, isNew: true });
     this._focusNew = () =>
-      this.shadowRoot.querySelector(`details[data-section="${name}"] textarea`)?.focus();
+      this.shadowRoot.querySelector(
+        `details[data-section="${name}"] ha-selector, details[data-section="${name}"] textarea`
+      )?.focus?.();
     this._edit(() => {}, true);
   }
 
