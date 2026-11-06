@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/principat/ha-template-attributes/compare/v1.0.0...v1.1.0) (2026-11-06)
+
+
+### Features
+
+* split the panel into helper list and editor, use the HA template editor ([309b63f](https://github.com/principat/ha-template-attributes/commit/309b63f35f4bfc0e43d36f4ce15f5329d7247b38))
+
 # 1.0.0 (2026-11-06)
 
 
