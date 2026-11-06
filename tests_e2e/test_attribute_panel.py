@@ -116,6 +116,63 @@ def test_invalid_name_and_template_are_reported(page, helper):
     page.screenshot(path=str(SHOTS / "panel-error.png"))
 
 
+def _create_helper(page, name: str, state_template: str) -> str:
+    flow = _api(page, "POST", "/api/config/config_entries/flow", {"handler": "template_attributes"})
+    result = _api(
+        page,
+        "POST",
+        f"/api/config/config_entries/flow/{flow['flow_id']}",
+        {"name": name, "state_template": state_template},
+    )
+    assert result["type"] == "create_entry", result
+    return result["result"]["entry_id"]
+
+
+@pytest.fixture
+def second_helper(page, helper):
+    """A second helper, so that "the first one" and "the linked one" differ."""
+    entry_id = _create_helper(page, "Zweiter Helfer", "{{ 7 }}")
+    yield entry_id
+    _api(page, "DELETE", f"/api/config/config_entries/entry/{entry_id}")
+
+
+def test_options_dialog_link_opens_the_panel_with_that_helper(page, second_helper):
+    """Click through the real UI: integration page -> Configure -> "Manage attributes" link."""
+    SHOTS.mkdir(exist_ok=True)
+    page.goto("/config/integrations/integration/template_attributes")
+    row = page.locator("ha-integration-card, ha-config-entry-row").filter(has_text="Zweiter Helfer")
+    row.get_by_role("button", name="Configure").click()
+
+    link = page.get_by_role("link", name="Manage attributes")
+    link.wait_for()
+    page.screenshot(path=str(SHOTS / "options-dialog.png"))
+    assert second_helper in link.get_attribute("href")
+    link.click()
+
+    # the panel opens with the helper of the dialog, not with the first one
+    page.wait_for_selector("template-attributes-panel details")
+    assert page.url.endswith(f"/template-attributes?entry={second_helper}")
+    assert page.get_by_role("combobox", name="Helper").input_value() == second_helper
+    assert "7" in page.locator("details[data-section='__state__'] summary").inner_text()
+    page.screenshot(path=str(SHOTS / "panel-from-options-link.png"))
+
+
+def test_deep_link_preselects_the_helper(page, helper):
+    """The options dialog links to /template-attributes?entry=<id>: that helper must be shown."""
+    second = _create_helper(page, "Zweiter Helfer", "{{ 7 }}")
+    try:
+        # without the parameter the first helper is shown, with it the linked one
+        page.goto(f"{PANEL}?entry={second}")
+        page.wait_for_selector("template-attributes-panel details")
+        assert page.get_by_role("combobox", name="Helper").input_value() == second
+        assert "7" in page.locator("details[data-section='__state__'] summary").inner_text()
+        # an unknown id falls back instead of showing an empty panel
+        page.goto(f"{PANEL}?entry=does-not-exist")
+        page.wait_for_selector("template-attributes-panel details")
+    finally:
+        _api(page, "DELETE", f"/api/config/config_entries/entry/{second}")
+
+
 def test_settings_link_points_to_the_integration(page, helper):
     _open_panel(page)
     href = page.get_by_role("link", name="Standard sensor settings").get_attribute("href")

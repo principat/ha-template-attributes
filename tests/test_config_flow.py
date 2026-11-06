@@ -45,6 +45,18 @@ async def test_render_error_is_reported_on_the_field(hass: HomeAssistant) -> Non
     assert result["errors"] == {CONF_STATE_TEMPLATE: "template_render_error"}
 
 
+async def test_options_flow_links_to_the_panel_with_this_helper(
+    hass: HomeAssistant, make_entry
+) -> None:
+    entry = make_entry("{{ 1 }}")
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["description_placeholders"]["panel_url"] == (
+        f"/template-attributes?entry={entry.entry_id}"
+    )
+
+
 async def test_options_flow_keeps_attributes_defined_in_the_panel(
     hass: HomeAssistant, make_entry
 ) -> None:

@@ -37,5 +37,7 @@ RESERVED_ATTRIBUTE_NAMES = frozenset(
 )
 
 PANEL_URL_PATH = "template-attributes"
+# query parameter that preselects a helper when the panel is opened
+PANEL_ENTRY_PARAM = "entry"
 PANEL_ELEMENT = "template-attributes-panel"
 PANEL_FILE = "template-attributes-panel.js"

@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "Edit Template Attributes helper",
-        "description": "Settings of the standard sensor. Custom attributes are edited in the **Template Attributes** sidebar panel.",
+        "description": "Settings of the standard sensor. [Manage attributes]({panel_url}) of this helper in the **Template Attributes** panel.",
         "data": {
           "state_template": "State template",
           "unit_of_measurement": "Unit of measurement (optional)",

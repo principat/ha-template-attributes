@@ -48,7 +48,11 @@ be a name Home Assistant reserves (`friendly_name`, `icon`, `unit_of_measurement
 `state_class`, ...).
 
 The settings of the standard sensor (state template, unit, ...) can be changed later with the
-helper's **Options** (the panel links to them).
+helper's **Options** (the panel links to them). Vice versa, the Options contain a **Manage
+attributes** link that opens the panel directly with that helper selected.
+
+The sidebar entry can be hidden like any other one (sidebar settings in your user profile); the
+panel stays reachable through that link and at `/template-attributes`.
 
 If a template fails at runtime, the error is logged, the last good value is kept and all other
 attributes keep working. More: see [`examples/en/`](examples/en/README.md).
@@ -121,7 +125,11 @@ und dürfen kein von Home Assistant reservierter Name sein (`friendly_name`, `ic
 `unit_of_measurement`, `device_class`, `state_class`, ...).
 
 Die Einstellungen des Standard-Sensors (State-Template, Einheit, ...) änderst du später über die
-**Optionen** des Helfers (das Panel verlinkt dorthin).
+**Optionen** des Helfers (das Panel verlinkt dorthin). Umgekehrt enthalten die Optionen einen Link
+**Attribute verwalten**, der das Panel direkt mit diesem Helfer öffnet.
+
+Den Seitenleisten-Eintrag kannst du wie jeden anderen ausblenden (Seitenleisten-Einstellungen im
+Benutzerprofil); das Panel bleibt über diesen Link und unter `/template-attributes` erreichbar.
 
 Schlägt ein Template zur Laufzeit fehl, wird der Fehler geloggt, der letzte gute Wert bleibt erhalten
 und alle anderen Attribute laufen weiter. Mehr: siehe [`examples/de/`](examples/de/README.md).

@@ -64,6 +64,10 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 - **F-14** Die Oberfläche ist deutsch und englisch (nach HA-Sprache).
 - **F-15** Gibt es mehrere Helfer, kann der zu bearbeitende gewählt werden; es gibt einen Link zu
   den Einstellungen des Standard-Sensors (F-3).
+- **F-20** Die „Optionen“ des Helfers enthalten einen Link „Attribute verwalten“, der direkt das
+  Panel mit **diesem** Helfer öffnet (nicht nur den ersten). Ob das Panel in der Seitenleiste
+  erscheint, verwaltet jeder Nutzer selbst über die HA-Seitenleisten-Einstellungen; es gibt dafür
+  keine eigene Option der Integration.
 
 ### 2.4 Verhalten des Sensors
 
@@ -108,7 +112,9 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 - **Panel** (`frontend.py`, `www/template-attributes-panel.js`): Sidebar-Panel über
   `panel_custom`, Vanilla-JS-Custom-Element mit Shadow DOM, kein Build-Schritt. Der Wert im
   Abschnittstitel wird aus `hass.states[entity_id]` gelesen (F-12). Texte DE/EN im Skript.
-  Registrierung schlägt nie auf die Integration durch.
+  Registrierung schlägt nie auf die Integration durch. Deep-Link (F-20): `/template-attributes?entry=<entry_id>`;
+  das Panel liest den Parameter beim Start und fällt bei unbekannter ID auf den ersten Helfer zurück.
+  Der Options-Flow liefert die URL als Platzhalter `panel_url` an die Beschreibung.
 - Übersetzungen: `strings.json` = `translations/en.json`, `translations/de.json`
   schlüsselgleich (ICU MessageFormat).
 
@@ -117,7 +123,7 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 - `tests/` (`python -m pytest`): gemockte HA-Instanz – Flow, Sensor, Websocket-API, Übersetzungen.
 - `tests_e2e/` (`python -m pytest tests_e2e`): echte `hass`-Instanz + echtes Frontend +
   Playwright (Chromium); legt einen Helfer über die Flow-API an und prüft das Panel
-  (F-6, F-7, F-10, F-11, F-13). Screenshots in `tests_e2e/screenshots/` nach jedem Lauf ansehen.
+  (F-6, F-7, F-10, F-11, F-13, F-20). Screenshots in `tests_e2e/screenshots/` nach jedem Lauf ansehen.
 - Beides läuft im Devcontainer (`.devcontainer/`).
 
 ### 4.3 CI/CD

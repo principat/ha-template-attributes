@@ -118,7 +118,8 @@ class TemplateAttributesPanel extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._helpers = null;
-    this._selected = null;
+    // deep link: /template-attributes?entry=<entry_id> preselects a helper (falls back to the first)
+    this._selected = new URLSearchParams(window.location.search).get("entry");
     this._draft = null;
     this._dirty = false;
     this._errors = {};

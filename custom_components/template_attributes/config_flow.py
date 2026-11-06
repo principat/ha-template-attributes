@@ -26,6 +26,8 @@ from .const import (
     CONF_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    PANEL_ENTRY_PARAM,
+    PANEL_URL_PATH,
 )
 from .validation import check_template
 
@@ -127,7 +129,13 @@ class TemplateAttributesOptionsFlow(config_entries.OptionsFlow):
     ) -> config_entries.FlowResult:
         current = {**self.config_entry.data, **self.config_entry.options}
         errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {"template_error": ""}
+        placeholders: dict[str, str] = {
+            "template_error": "",
+            # deep link into the attribute panel with this helper preselected
+            "panel_url": (
+                f"/{PANEL_URL_PATH}?{PANEL_ENTRY_PARAM}={self.config_entry.entry_id}"
+            ),
+        }
         if user_input is not None:
             errors, found = _validate(self.hass, user_input)
             placeholders.update(found)

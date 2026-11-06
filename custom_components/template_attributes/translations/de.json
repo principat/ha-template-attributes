@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "Template-Attributes-Helfer bearbeiten",
-        "description": "Einstellungen des Standard-Sensors. Eigene Attribute werden im Seitenleisten-Panel **Template Attributes** bearbeitet.",
+        "description": "Einstellungen des Standard-Sensors. [Attribute verwalten]({panel_url}) dieses Helfers im Panel **Template Attributes**.",
         "data": {
           "state_template": "State-Template",
           "unit_of_measurement": "Einheit (optional)",
