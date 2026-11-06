@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Template Attributes",
+        "description": "Creates the standard sensor. Custom attributes are added afterwards in the **Template Attributes** sidebar panel.",
+        "data": {
+          "name": "Name",
+          "state_template": "State template",
+          "unit_of_measurement": "Unit of measurement (optional)",
+          "device_class": "Device class (optional)",
+          "state_class": "State class (optional)",
+          "icon": "Icon (optional)",
+          "update_interval_minutes": "Recalculation interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_template": "Template is not valid: {template_error}",
+      "template_render_error": "Template failed on a test render: {template_error}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Template Attributes helper",
+        "description": "Settings of the standard sensor. Custom attributes are edited in the **Template Attributes** sidebar panel.",
+        "data": {
+          "state_template": "State template",
+          "unit_of_measurement": "Unit of measurement (optional)",
+          "device_class": "Device class (optional)",
+          "state_class": "State class (optional)",
+          "icon": "Icon (optional)",
+          "update_interval_minutes": "Recalculation interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_template": "Template is not valid: {template_error}",
+      "template_render_error": "Template failed on a test render: {template_error}"
+    }
+  }
+}
