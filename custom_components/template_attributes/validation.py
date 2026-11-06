@@ -1,4 +1,4 @@
-"""Validation shared by the config flow and the websocket API (single source of truth)."""
+"""Validation used by the config and options flow (single source of truth)."""
 from __future__ import annotations
 
 import re
@@ -7,16 +7,14 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import Template
 
-from .const import (
-    CONF_ATTRIBUTE_NAME,
-    CONF_ATTRIBUTE_TEMPLATE,
-    RESERVED_ATTRIBUTE_NAMES,
-)
+from .const import RESERVED_ATTRIBUTE_NAMES
 
 _NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 ERR_INVALID_TEMPLATE = "invalid_template"
 ERR_RENDER = "template_render_error"
+ERR_ATTRIBUTE_INVALID_TEMPLATE = "attribute_invalid_template"
+ERR_ATTRIBUTE_RENDER = "attribute_template_render_error"
 ERR_INVALID_NAME = "invalid_attribute_name"
 ERR_RESERVED_NAME = "reserved_attribute_name"
 ERR_DUPLICATE_NAME = "duplicate_attribute_name"
@@ -55,33 +53,25 @@ def check_attribute_names(names: list[str]) -> dict[str, str]:
     return errors
 
 
-def validate_definition(
-    hass: HomeAssistant, state_template: str, attributes: list[dict[str, str]]
-) -> dict[str, Any]:
-    """Validate state template + attributes.
+def check_attributes(
+    hass: HomeAssistant, attributes: list[dict[str, str]]
+) -> tuple[str, str, str] | None:
+    """Validate all attributes (name rules, then every template with ``state`` = 0).
 
-    Returns {} if everything is fine, otherwise
-    ``{"state_template": {code, message}, "attributes": {name: {code, message}}}``
-    (only the failing parts are present).
+    Returns ``(error_code, attribute_name, message)`` for the first problem, or None if fine.
     """
-    errors: dict[str, Any] = {}
-
-    problem = check_template(hass, state_template)
-    if problem:
-        errors["state_template"] = {"code": problem[0], "message": problem[1]}
-
-    names = [attr[CONF_ATTRIBUTE_NAME] for attr in attributes]
-    attribute_errors: dict[str, dict[str, str]] = {
-        name: {"code": code, "message": ""}
-        for name, code in check_attribute_names(names).items()
-    }
+    names = [attr["name"] for attr in attributes]
+    name_errors = check_attribute_names(names)
+    for name in names:
+        if name in name_errors:
+            return name_errors[name], name, ""
     for attr in attributes:
-        name = attr[CONF_ATTRIBUTE_NAME]
-        if name in attribute_errors:
-            continue
-        problem = check_template(hass, attr[CONF_ATTRIBUTE_TEMPLATE], {"state": 0})
+        problem = check_template(hass, attr["template"], {"state": 0})
         if problem:
-            attribute_errors[name] = {"code": problem[0], "message": problem[1]}
-    if attribute_errors:
-        errors["attributes"] = attribute_errors
-    return errors
+            code = (
+                ERR_ATTRIBUTE_INVALID_TEMPLATE
+                if problem[0] == ERR_INVALID_TEMPLATE
+                else ERR_ATTRIBUTE_RENDER
+            )
+            return code, attr["name"], problem[1]
+    return None

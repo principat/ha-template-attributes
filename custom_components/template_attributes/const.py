@@ -14,12 +14,22 @@ CONF_DEVICE_CLASS = "device_class"
 CONF_STATE_CLASS = "state_class"
 CONF_ICON = "icon"
 CONF_UPDATE_INTERVAL = "update_interval_minutes"
+# options flow: tick to add a new attribute after saving / "add another" on the attribute step
+CONF_ADD_ATTRIBUTE = "add_attribute"
+CONF_ADD_ANOTHER = "add_another"
+# options flow confirm step: go back to the form instead of applying deletions / renames
+CONF_GO_BACK = "go_back"
 
 DEFAULT_UPDATE_INTERVAL = 15
 
 # Attribute names Home Assistant itself writes into a state; a custom attribute must not shadow them.
+# The last three are form fields of the options flow: an attribute is a form *section* named like
+# the attribute, so it must not collide with a top-level field.
 RESERVED_ATTRIBUTE_NAMES = frozenset(
     {
+        "state_template",
+        "update_interval_minutes",
+        "add_attribute",
         "friendly_name",
         "unit_of_measurement",
         "device_class",
@@ -36,8 +46,3 @@ RESERVED_ATTRIBUTE_NAMES = frozenset(
     }
 )
 
-PANEL_URL_PATH = "template-attributes"
-# query parameter that preselects a helper when the panel is opened
-PANEL_ENTRY_PARAM = "entry"
-PANEL_ELEMENT = "template-attributes-panel"
-PANEL_FILE = "template-attributes-panel.js"

@@ -16,10 +16,10 @@ unabhängig von der technischen Umsetzung. Der Bereich **Technische Aspekte** be
 ## 1. Zweck des Projekts
 
 Eine Home-Assistant-Integration (HACS), mit der sich ein **Template-Sensor mit beliebig vielen
-zusätzlichen Attributen** komplett in der HA-Oberfläche anlegen und pflegen lässt – ohne YAML.
-Wie beim Schwesterprojekt `ha-template-forecast` wird ein Standard-Sensor nachgebildet
-(Zustand per Template, Einheit, Geräte-/Statusklasse, Icon); zusätzlich können eigene Attribute
-mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
+zusätzlichen Attributen** komplett in den Standard-Dialogen der HA-Oberfläche anlegen und pflegen
+lässt – ohne YAML und ohne eigenes Panel. Wie beim Schwesterprojekt `ha-template-forecast` wird ein
+Standard-Sensor nachgebildet (Zustand per Template, Einheit, Geräte-/Statusklasse, Icon); zusätzlich
+können eigene Attribute mit je **eigenem Template** hinzugefügt, umbenannt und gelöscht werden.
 
 ## 2. Funktionale Anforderungen
 
@@ -37,60 +37,53 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 
 - **F-5** Ein Helfer hat eine geordnete Liste beliebig vieler Attribute; jedes besteht aus
   **Name** und **eigenem Template**.
-- **F-6** Hinzufügen: **unter dem letzten Abschnitt** steht ein Eingabefeld für den Namen mit
-  Button „Attribut hinzufügen“ (auch Enter). Es entsteht ein neuer, **geöffneter** Abschnitt zur
-  Bearbeitung des Templates; darunter steht wieder das Eingabefeld für das nächste Attribut.
-- **F-7** Löschen: **hinter jedem Attributnamen** ein kleines Papierkorb-Symbol; es entfernt das
-  Attribut samt Template. Das Löschen wird erst mit „Speichern“ wirksam.
+- **F-6** Hinzufügen beim **Erstellen**: Nach dem Standard-Sensor folgt ein Schritt „Attribut
+  hinzufügen“ (Name, Template, Haken „Weiteres Attribut hinzufügen“). Mit Haken wird das Attribut
+  übernommen und sofort eine neue, leere Eingabe geöffnet; ohne Haken wird der Helfer angelegt.
+  Bleibt der Name leer, ist der Schritt übersprungen bzw. beendet.
+- **F-7** Bearbeiten in den **Optionen**: Jedes vorhandene Attribut ist ein **eingeklappter
+  Abschnitt**, dessen **Titel der Attributname** ist. Darin: Name, Template (Standard-Template-
+  Editor) und ein **Schalter „Dieses Attribut löschen“** (als erstes Feld des Abschnitts, mit dem
+  Hinweis, dass Name und Template dann ignoriert werden). Ein geänderter Name **benennt** das
+  Attribut um. Ein Formular kann Felder nicht live deaktivieren oder einfärben; deshalb gibt es vor
+  dem Speichern einen **Bestätigungsschritt** (F-19).
+- **F-19** Werden beim Absenden der Optionen Attribute gelöscht oder umbenannt, zeigt ein
+  Bestätigungsschritt, was gelöscht und was umbenannt wird („Gelöscht: …“, „Umbenannt: alt → neu“).
+  Erst „Absenden“ übernimmt die Änderungen; ein Haken „Zurück und weiter bearbeiten“ führt zum
+  Formular mit den bisherigen Eingaben zurück. Ohne Löschen/Umbenennen entfällt der Schritt.
 - **F-8** Namensregeln: nicht leer, nur Buchstaben/Ziffern/Unterstrich, nicht mit Ziffer
   beginnend, eindeutig innerhalb des Helfers, kein von HA reservierter Name
-  (z. B. `friendly_name`, `icon`, `unit_of_measurement`, `device_class`, `state_class`, …).
-  Verstöße werden sofort (beim Hinzufügen) bzw. beim Speichern lokalisiert gemeldet.
+  (z. B. `friendly_name`, `icon`, `unit_of_measurement`, `device_class`, `state_class`, …) und kein
+  Feldname des Formulars (`state_template`, `update_interval_minutes`, `add_attribute`).
+  Verstöße werden mit lokalisierter Meldung (inkl. Attributname) angezeigt, es wird nichts gespeichert.
 - **F-9** Im Template eines Attributs steht die Variable `state` (aktueller Zustand des Sensors)
   zur Verfügung. Das Ergebnis behält seinen Typ (Zahl, Liste, Objekt, Text).
-
-### 2.3 Darstellung / Bedienung
-
-- **F-10** Name und Template gehören zusammen: je Attribut **ein Abschnitt** (aufklappbar), im
-  Titel stehen **Name und aktueller Wert** („Name = Wert“, lange Werte werden gekürzt).
-  Dasselbe gilt für den Standard-Sensor („Zustand = Wert“).
-- **F-11** **Alle Abschnitte sind zunächst geschlossen**, damit Attribute und Werte auf einen
-  Blick sichtbar sind. Geöffnet sind nur der gerade neu hinzugefügte Abschnitt und Abschnitte
-  mit einem Validierungsfehler. Nach dem Speichern sind wieder alle geschlossen.
-- **F-12** Der Wert im Titel folgt dem tatsächlichen Zustand der Entität (live, ohne Neuladen).
-- **F-13** Änderungen werden gesammelt und mit „Speichern“ übernommen (validiert als Ganzes);
-  „Änderungen verwerfen“ setzt zurück. Bei Validierungsfehlern wird nichts gespeichert und der
-  Fehler am betroffenen Abschnitt angezeigt.
+- **F-10** Templates (State und Attribute) werden mit dem **Standard-Template-Editor von Home
+  Assistant** bearbeitet (Syntax-Hervorhebung, Autovervollständigung).
+- **F-11** Unter den Abschnitten der vorhandenen Attribute steht ein **Haken „Nach dem Speichern
+  ein neues Attribut hinzufügen“**. Ist er gesetzt, öffnet sich nach dem Absenden der Schritt
+  „Attribut hinzufügen“ (wie F-6, mit „Weiteres Attribut hinzufügen“); gespeichert wird erst am Ende.
+- **F-12** Bei Validierungsfehlern wird nichts gespeichert; das Formular bleibt offen und behält
+  die Eingaben (inkl. Umbenennungen und gesetzter Lösch-Schalter).
+- **F-13** Ein zum Löschen markiertes Attribut wird nicht mehr validiert.
 - **F-14** Die Oberfläche ist deutsch und englisch (nach HA-Sprache).
-- **F-15** Das Panel ist zweigeteilt: **links** die Liste aller Helfer, **rechts** daneben die
-  Bearbeitung des gewählten Helfers (Abschnitte, Hinzufügen, Speichern). Es gibt einen Link zu den
-  Einstellungen des Standard-Sensors (F-3). Auf schmalen Bildschirmen steht die Liste über dem Editor.
-- **F-21** Die Helfer-Liste ist **nach Name sortiert** und hat **oben ein Suchfeld**: Teile des
-  Namens (ohne Beachtung der Groß-/Kleinschreibung) filtern die Liste sofort. Ohne Treffer erscheint
-  ein Hinweis. Beim Wechsel des Helfers mit ungespeicherten Änderungen wird nachgefragt.
-- **F-22** Templates (State und Attribute) werden mit dem **Standard-Template-Editor von Home
-  Assistant** bearbeitet (Syntax-Hervorhebung, Autovervollständigung von Entitäten und Funktionen),
-  nicht in einem einfachen Textfeld.
-- **F-20** Die „Optionen“ des Helfers enthalten **unterhalb des Formulars** einen gut sichtbaren
-  Link „Attribute verwalten“, der direkt das Panel mit **diesem** Helfer öffnet (nicht nur den
-  ersten). Ob das Panel in der Seitenleiste erscheint, verwaltet jeder Nutzer selbst über die
-  HA-Seitenleisten-Einstellungen; es gibt dafür keine eigene Option der Integration.
 
-### 2.4 Verhalten des Sensors
+### 2.3 Verhalten des Sensors
 
-- **F-16** Zustand und Attribute werden neu berechnet, wenn sich eine Entität ändert, die ein
+- **F-15** Zustand und Attribute werden neu berechnet, wenn sich eine Entität ändert, die ein
   Template liest, sowie periodisch (F-2).
-- **F-17** Ein fehlerhaftes Template zur Laufzeit wird geloggt; der **letzte gute Wert bleibt**,
+- **F-16** Ein fehlerhaftes Template zur Laufzeit wird geloggt; der **letzte gute Wert bleibt**,
   andere Attribute sind nicht betroffen, HA läuft ungestört weiter.
-- **F-18** Nach einem Neustart wird der letzte Zustand wiederhergestellt (nur noch definierte
-  Attribute).
-- **F-19** Änderungen an Template/Attributen wirken sofort (Entität wird neu geladen).
+- **F-17** Nach einem Neustart wird der letzte Zustand wiederhergestellt (nur noch definierte
+  Attribute; ein umbenanntes oder gelöschtes Attribut verschwindet).
+- **F-18** Änderungen an Template/Attributen wirken sofort (Entität wird neu geladen).
 
 ## 3. Nicht-funktionale Anforderungen
 
 - Keine YAML-Konfiguration nötig – vollständige Bedienung über die HA-UI.
+- Keine eigene Frontend-Komponente (Panel, JS): nur Standard-Dialoge von Home Assistant.
 - Robustheit: Fehler in Nutzereingaben/-templates destabilisieren Home Assistant nie.
-- Lokalisierte, feldgenaue Fehlermeldungen.
+- Lokalisierte Fehlermeldungen mit Bezug zum Attribut.
 - Testbarkeit ohne reale HA-Instanz plus UI-Absicherung im echten Browser.
 - Automatisiertes Releasing (Conventional Commits, semantic-release) mit Test-Gate.
 - Dokumentation (README, Beispiele) zweisprachig; diese Spezifikation nur deutsch.
@@ -102,42 +95,41 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 - Custom Integration `template_attributes`, `integration_type: helper`, `iot_class: calculated`,
   Config Entry pro Helfer. Wirksame Konfiguration = `data` gemischt mit `options` (`options`
   gewinnt). Attribute liegen als Liste `attributes: [{name, template}]` im Entry.
-- **Config-/Options-Flow** (`config_flow.py`) deckt nur den Standard-Sensor ab (F-1…F-4). Ein
-  Config-Flow kann weder Live-Werte in Abschnittstiteln noch Hinzufügen-/Löschen-Buttons
-  darstellen – deshalb übernimmt die Attribute ein eigenes Panel. Der Options-Flow übernimmt
-  `options` per Merge, damit `attributes` erhalten bleiben.
-- **Validierung** (`validation.py`) ist die gemeinsame Quelle für Flow und Websocket: Syntaxcheck
-  (`Template.ensure_valid`) plus ein Testrender (`state` = 0 für Attribute).
+- **Config-Flow** (`config_flow.py`): Schritt `user` (Standard-Sensor) → Schritt `attribute`
+  (wiederholt, solange `add_another` gesetzt ist) → Entry. Der Entry wird erst am Ende angelegt.
+- **Options-Flow**: Schritt `init` = Standard-Sensor-Felder + je Attribut ein
+  `data_entry_flow.section` (eingeklappt) + Boolean `add_attribute`; danach optional derselbe
+  Schritt `attribute`. Zwischen `init` und dem Rest liegt bei Löschungen/Umbenennungen der Schritt
+  `confirm` (Platzhalter `changes`, Haken `go_back`). Gespeichert wird einmal am Ende (`async_create_entry` mit allen Optionen).
+  `options` werden per Merge übernommen, damit unbekannte Schlüssel erhalten bleiben.
+- **Abschnitte**: Der Schlüssel eines Abschnitts ist der *ursprüngliche* Attributname; HA zeigt ihn
+  als Titel, weil es keine Übersetzung dafür gibt. Weil die Schlüssel dynamisch sind, können die
+  Feldlabels im Abschnitt („Name“, „Template“, „Dieses Attribut löschen“) nicht aus den
+  Übersetzungsdateien kommen; sie stehen in `SECTION_LABELS` (`config_flow.py`) und werden nach der
+  HA-Serversprache gewählt. Der Lösch-Schalter ist ein `BooleanSelector` (rendert als Schalter, ein
+  einfaches `bool` wäre ein Kontrollkästchen). Wegen des Abschnittsschlüssels dürfen Attributnamen
+  nicht wie Formularfelder heißen (F-8, `RESERVED_ATTRIBUTE_NAMES`).
+- **Fehler** der Attribute sind `base`-Fehler mit den Platzhaltern `attribute` und
+  `template_error` (Fehler in Abschnittsfeldern lassen sich im Formular nicht feldgenau anzeigen).
+  Das State-Template behält seinen feldgenauen Fehler.
+- **Validierung** (`validation.py`): Syntaxcheck (`Template.ensure_valid`) plus ein Testrender
+  (`state` = 0 für Attribute); Namensregeln in `check_attribute_names`, gesamte Attributliste in
+  `check_attributes`.
 - **Sensor** (`sensor.py`): `SensorEntity` + `RestoreEntity`; Abhängigkeiten über
   `async_render_to_info`, `async_track_state_change_event`, `async_track_time_interval`.
-  Fehler pro Template werden einzeln abgefangen (F-17). Neuladen bei Änderung der Entry über
+  Fehler pro Template werden einzeln abgefangen (F-16). Neuladen bei Änderung des Entry über
   einen Update-Listener (`__init__.py`).
-- **Websocket-API** (`websocket_api.py`, nur Admin): `template_attributes/list` und
-  `template_attributes/save`. Validierungsfehler sind ein normales Ergebnis
-  (`{ok: false, errors: {state_template?, attributes?: {name: {code, message}}}}`), kein
-  Websocket-Fehler. Speichern schreibt nur `state_template` und `attributes` in die `options`.
-- **Panel** (`frontend.py`, `www/template-attributes-panel.js`): Sidebar-Panel über
-  `panel_custom`, Vanilla-JS-Custom-Element mit Shadow DOM, kein Build-Schritt. Der Wert im
-  Abschnittstitel wird aus `hass.states[entity_id]` gelesen (F-12). Texte DE/EN im Skript.
-  Registrierung schlägt nie auf die Integration durch. Deep-Link (F-20): `/template-attributes?entry=<entry_id>`;
-  das Panel liest den Parameter beim Start und fällt bei unbekannter ID auf den ersten Helfer zurück.
-  Der Options-Flow liefert die URL als Platzhalter `panel_url`; der Link steht als Markdown in der
-  Feldbeschreibung (`data_description`) des letzten Formularfelds, damit er unter dem Formular
-  erscheint (eine Flow-Beschreibung steht immer oberhalb).
-  Layout (F-15, F-21): CSS-Grid mit Liste (`aside`) und Editor; Helfer werden im Panel nach Titel
-  sortiert. Template-Editor (F-22): `<ha-selector>` mit `selector: {template: {}}` (lädt
-  `ha-code-editor`); das Panel stößt das Laden von `ha-selector` selbst an (`loadCardHelpers` +
-  Config-Element einer Standard-Karte), weil ein eigenständiges Panel es nicht mitbringt. Ist
-  `ha-selector` nicht verfügbar, fällt das Panel auf ein `textarea` zurück.
 - Übersetzungen: `strings.json` = `translations/en.json`, `translations/de.json`
-  schlüsselgleich (ICU MessageFormat).
+  schlüsselgleich (ICU MessageFormat; kein einfacher Apostroph in Texten mit Platzhaltern).
 
 ### 4.2 Tests
 
-- `tests/` (`python -m pytest`): gemockte HA-Instanz – Flow, Sensor, Websocket-API, Übersetzungen.
+- `tests/` (`python -m pytest`): gemockte HA-Instanz – Flow (Erstellen, Attribut-Schritt, Abschnitte,
+  Umbenennen, Löschen, Fehler), Sensor, Übersetzungen.
 - `tests_e2e/` (`python -m pytest tests_e2e`): echte `hass`-Instanz + echtes Frontend +
-  Playwright (Chromium); legt einen Helfer über die Flow-API an und prüft das Panel
-  (F-6, F-7, F-10, F-11, F-13, F-15, F-20, F-21, F-22). Screenshots in `tests_e2e/screenshots/` nach jedem Lauf ansehen.
+  Playwright (Chromium); legt einen Helfer über die Flow-API an und klickt den Options-Dialog durch
+  (Abschnitte, Umbenennen, Löschen, Haken „Neues Attribut“). Screenshots in `tests_e2e/screenshots/`
+  nach jedem Lauf ansehen.
 - Beides läuft im Devcontainer (`.devcontainer/`).
 
 ### 4.3 CI/CD
@@ -148,5 +140,6 @@ mit je **eigenem Template** hinzugefügt und wieder gelöscht werden.
 
 ## 5. Offene Punkte / Ideen
 
-- Live-Vorschau des Werts schon während der Bearbeitung (Testrender vor dem Speichern).
-- Anlegen eines neuen Helfers direkt im Panel.
+- Live-Wert der Attribute im Dialog (nicht möglich: Formulare kennen keine Live-Werte).
+- Reihenfolge der Attribute ändern.
+- Eigene Seitenleisten-Ansicht (früher als Panel vorhanden, entfernt, siehe Abschnitt 1).

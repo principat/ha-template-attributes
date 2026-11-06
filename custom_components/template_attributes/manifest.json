@@ -4,12 +4,6 @@
   "codeowners": [
     "@principat"
   ],
-  "after_dependencies": [
-    "http",
-    "frontend",
-    "panel_custom",
-    "websocket_api"
-  ],
   "config_flow": true,
   "documentation": "https://github.com/principat/ha-template-attributes",
   "issue_tracker": "https://github.com/principat/ha-template-attributes/issues",

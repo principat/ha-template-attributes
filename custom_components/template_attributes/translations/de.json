@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Template Attributes",
-        "description": "Erstellt den Standard-Sensor. Eigene Attribute werden anschließend im Seitenleisten-Panel **Template Attributes** hinzugefügt.",
+        "description": "Erstellt den Standard-Sensor. Im nächsten Schritt können eigene Attribute hinzugefügt werden (optional).",
         "data": {
           "name": "Name",
           "state_template": "State-Template",
@@ -13,34 +13,67 @@
           "icon": "Icon (optional)",
           "update_interval_minutes": "Neuberechnungsintervall (Minuten)"
         }
+      },
+      "attribute": {
+        "title": "Attribut hinzufügen",
+        "description": "Bisherige Attribute: {attributes}\n\nName und Template eingeben. Im Template enthält die Variable `state` den Zustand dieses Sensors. Zum Abschließen den Namen leer lassen.",
+        "data": {
+          "name": "Attributname (zum Abschließen leer lassen)",
+          "template": "Attribut-Template",
+          "add_another": "Danach ein weiteres Attribut hinzufügen"
+        }
       }
     },
     "error": {
       "invalid_template": "Template ist ungültig: {template_error}",
-      "template_render_error": "Template ist beim Testrendern fehlgeschlagen: {template_error}"
+      "template_render_error": "Template ist beim Testrendern fehlgeschlagen: {template_error}",
+      "attribute_invalid_template": "Attribut {attribute}: Template ist ungültig: {template_error}",
+      "attribute_template_render_error": "Attribut {attribute}: Template ist beim Testrendern fehlgeschlagen: {template_error}",
+      "invalid_attribute_name": "Attribut {attribute}: Nur Buchstaben, Ziffern und Unterstrich verwenden, nicht mit einer Ziffer beginnen.",
+      "reserved_attribute_name": "Attribut {attribute}: Dieser Name ist von Home Assistant reserviert.",
+      "duplicate_attribute_name": "Attribut {attribute}: Dieser Name wird bereits verwendet."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Template-Attributes-Helfer bearbeiten",
-        "description": "Einstellungen des Standard-Sensors. Die eigenen Attribute werden im Panel **Template Attributes** bearbeitet (Link unter dem Formular).",
+        "description": "Einstellungen des Standard-Sensors und seiner Attribute. Jedes Attribut hat einen eigenen Abschnitt: Name ändern benennt es um, der Löschen-Schalter entfernt es (wirksam beim Absenden). Mit dem letzten Haken werden neue Attribute hinzugefügt.",
         "data": {
           "state_template": "State-Template",
           "unit_of_measurement": "Einheit (optional)",
           "device_class": "Geräteklasse (optional)",
           "state_class": "Statusklasse (optional)",
           "icon": "Icon (optional)",
-          "update_interval_minutes": "Neuberechnungsintervall (Minuten)"
-        },
-        "data_description": {
-          "update_interval_minutes": "Wie oft Zustand und Attribute zusätzlich zu Änderungen der in den Templates verwendeten Entitäten neu berechnet werden.\n\n### [Attribute dieses Helfers verwalten →]({panel_url})"
+          "update_interval_minutes": "Neuberechnungsintervall (Minuten)",
+          "add_attribute": "Nach dem Speichern ein neues Attribut hinzufügen"
+        }
+      },
+      "confirm": {
+        "title": "Änderungen bestätigen",
+        "description": "Diese Änderungen werden übernommen:\n\n{changes}\n\nMit „Absenden“ übernehmen. Mit dem Haken stattdessen zurück zur Bearbeitung.",
+        "data": {
+          "go_back": "Zurück und weiter bearbeiten"
+        }
+      },
+      "attribute": {
+        "title": "Attribut hinzufügen",
+        "description": "Bisherige Attribute: {attributes}\n\nName und Template eingeben. Im Template enthält die Variable `state` den Zustand dieses Sensors. Zum Abschließen den Namen leer lassen.",
+        "data": {
+          "name": "Attributname (zum Abschließen leer lassen)",
+          "template": "Attribut-Template",
+          "add_another": "Danach ein weiteres Attribut hinzufügen"
         }
       }
     },
     "error": {
       "invalid_template": "Template ist ungültig: {template_error}",
-      "template_render_error": "Template ist beim Testrendern fehlgeschlagen: {template_error}"
+      "template_render_error": "Template ist beim Testrendern fehlgeschlagen: {template_error}",
+      "attribute_invalid_template": "Attribut {attribute}: Template ist ungültig: {template_error}",
+      "attribute_template_render_error": "Attribut {attribute}: Template ist beim Testrendern fehlgeschlagen: {template_error}",
+      "invalid_attribute_name": "Attribut {attribute}: Nur Buchstaben, Ziffern und Unterstrich verwenden, nicht mit einer Ziffer beginnen.",
+      "reserved_attribute_name": "Attribut {attribute}: Dieser Name ist von Home Assistant reserviert.",
+      "duplicate_attribute_name": "Attribut {attribute}: Dieser Name wird bereits verwendet."
     }
   }
 }

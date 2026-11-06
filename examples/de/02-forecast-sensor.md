@@ -23,7 +23,7 @@ nur ein einfacher linearer Trend, die Berechnung durch eigene Logik ersetzen.
 | Geräteklasse | `temperature` |
 | Neuberechnungsintervall | `60` |
 
-**Attribute** (Seitenleiste → Template Attributes)
+**Attribute** (Schritt „Attribut hinzufügen“ beim Erstellen, später in den Optionen des Helfers)
 
 | Name | Template |
 |---|---|
@@ -46,6 +46,6 @@ Liste von Objekten und lässt sich in Automationen und Dashboards verwenden
 
 Hinweise:
 
-- Im Panel lautet der Abschnitt `forecast = [{"time": "...", "value": 20.0}, ...]`.
+- In den Attributen der Entität steht `forecast` als Liste von Objekten mit `time` und `value`.
 - Home Assistant speichert Zustandsattribute in der Datenbank. Sehr lange Listen machen jede
   Zustandsänderung groß – die Anzahl der Schritte in Maßen halten.

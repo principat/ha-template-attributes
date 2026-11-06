@@ -51,7 +51,15 @@ def test_placeholders_match_between_languages(lang: str) -> None:
 @pytest.mark.parametrize("lang", ["en", "de"])
 def test_every_error_code_of_the_flow_is_translated(lang: str) -> None:
     errors = _load(lang)["config"]["error"]
-    for code in (validation.ERR_INVALID_TEMPLATE, validation.ERR_RENDER):
+    for code in (
+        validation.ERR_INVALID_TEMPLATE,
+        validation.ERR_RENDER,
+        validation.ERR_ATTRIBUTE_INVALID_TEMPLATE,
+        validation.ERR_ATTRIBUTE_RENDER,
+        validation.ERR_INVALID_NAME,
+        validation.ERR_RESERVED_NAME,
+        validation.ERR_DUPLICATE_NAME,
+    ):
         assert code in errors
     assert errors == _load(lang)["options"]["error"]
 
@@ -59,7 +67,27 @@ def test_every_error_code_of_the_flow_is_translated(lang: str) -> None:
 def test_all_flow_fields_have_a_label() -> None:
     from custom_components.template_attributes import config_flow
 
-    for with_name, section in ((True, "config.step.user"), (False, "options.step.init")):
-        labels = _flatten(_load("en"))
-        for field in config_flow._schema({}, with_name).schema:
-            assert f"{section}.data.{field}" in labels, (section, str(field))
+    labels = _flatten(_load("en"))
+    forms = {
+        "config.step.user": config_flow._schema({}, with_name=True),
+        "config.step.attribute": config_flow._attribute_schema().schema,
+        "options.step.attribute": config_flow._attribute_schema().schema,
+        "options.step.confirm": {"go_back": None},
+        # sections are dynamic (named like the attribute), their field labels come from code
+        "options.step.init": config_flow.options_schema(
+            {}, [], config_flow.section_labels("en")
+        ).schema,
+    }
+    for step, fields in forms.items():
+        for field in fields:
+            assert f"{step}.data.{field}" in labels, (step, str(field))
+
+
+def test_section_labels_exist_for_every_language() -> None:
+    from custom_components.template_attributes import config_flow
+
+    assert set(config_flow.SECTION_LABELS) == {"en", "de"}
+    for texts in config_flow.SECTION_LABELS.values():
+        assert set(texts) == {"name", "template", "delete", "deleted", "renamed"}
+    assert config_flow.section_labels("de-AT")["delete"].startswith("Dieses")
+    assert config_flow.section_labels(None) == config_flow.SECTION_LABELS["en"]

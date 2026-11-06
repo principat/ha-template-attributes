@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Template Attributes",
-        "description": "Creates the standard sensor. Custom attributes are added afterwards in the **Template Attributes** sidebar panel.",
+        "description": "Creates the standard sensor. The next step adds custom attributes (optional).",
         "data": {
           "name": "Name",
           "state_template": "State template",
@@ -13,34 +13,67 @@
           "icon": "Icon (optional)",
           "update_interval_minutes": "Recalculation interval (minutes)"
         }
+      },
+      "attribute": {
+        "title": "Add attribute",
+        "description": "Attributes so far: {attributes}\n\nEnter a name and a template. In the template, the variable `state` holds the state of this sensor. Leave the name empty to finish.",
+        "data": {
+          "name": "Attribute name (leave empty to finish)",
+          "template": "Attribute template",
+          "add_another": "Add another attribute after this one"
+        }
       }
     },
     "error": {
       "invalid_template": "Template is not valid: {template_error}",
-      "template_render_error": "Template failed on a test render: {template_error}"
+      "template_render_error": "Template failed on a test render: {template_error}",
+      "attribute_invalid_template": "Attribute {attribute}: template is not valid: {template_error}",
+      "attribute_template_render_error": "Attribute {attribute}: template failed on a test render: {template_error}",
+      "invalid_attribute_name": "Attribute {attribute}: use letters, digits and underscore only, and do not start with a digit.",
+      "reserved_attribute_name": "Attribute {attribute}: this name is reserved by Home Assistant.",
+      "duplicate_attribute_name": "Attribute {attribute}: this name is already used."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Edit Template Attributes helper",
-        "description": "Settings of the standard sensor. The custom attributes are edited in the **Template Attributes** panel (link below the form).",
+        "description": "Settings of the standard sensor and its attributes. Every attribute has its own section: change the name to rename it, switch on the delete switch to remove it (applied when you submit). Tick the last box to add new attributes.",
         "data": {
           "state_template": "State template",
           "unit_of_measurement": "Unit of measurement (optional)",
           "device_class": "Device class (optional)",
           "state_class": "State class (optional)",
           "icon": "Icon (optional)",
-          "update_interval_minutes": "Recalculation interval (minutes)"
-        },
-        "data_description": {
-          "update_interval_minutes": "How often the state and the attributes are recalculated in addition to changes of the entities used in the templates.\n\n### [Manage attributes of this helper →]({panel_url})"
+          "update_interval_minutes": "Recalculation interval (minutes)",
+          "add_attribute": "Add a new attribute after saving"
+        }
+      },
+      "confirm": {
+        "title": "Confirm changes",
+        "description": "These changes will be applied:\n\n{changes}\n\nSubmit to apply them. Tick the box to go back and edit instead.",
+        "data": {
+          "go_back": "Go back and edit"
+        }
+      },
+      "attribute": {
+        "title": "Add attribute",
+        "description": "Attributes so far: {attributes}\n\nEnter a name and a template. In the template, the variable `state` holds the state of this sensor. Leave the name empty to finish.",
+        "data": {
+          "name": "Attribute name (leave empty to finish)",
+          "template": "Attribute template",
+          "add_another": "Add another attribute after this one"
         }
       }
     },
     "error": {
       "invalid_template": "Template is not valid: {template_error}",
-      "template_render_error": "Template failed on a test render: {template_error}"
+      "template_render_error": "Template failed on a test render: {template_error}",
+      "attribute_invalid_template": "Attribute {attribute}: template is not valid: {template_error}",
+      "attribute_template_render_error": "Attribute {attribute}: template failed on a test render: {template_error}",
+      "invalid_attribute_name": "Attribute {attribute}: use letters, digits and underscore only, and do not start with a digit.",
+      "reserved_attribute_name": "Attribute {attribute}: this name is reserved by Home Assistant.",
+      "duplicate_attribute_name": "Attribute {attribute}: this name is already used."
     }
   }
 }

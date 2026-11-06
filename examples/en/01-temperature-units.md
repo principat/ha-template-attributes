@@ -12,11 +12,11 @@ One sensor whose state is °C and whose attributes give the same temperature in 
 | Unit | `°C` |
 | Device class | `temperature` |
 
-**Attributes** (sidebar → Template Attributes)
+**Attributes** (the "Add attribute" step when creating, later in the helper options)
 
 | Name | Template |
 |---|---|
 | `fahrenheit` | `{{ (state \| float * 9 / 5 + 32) \| round(1) }}` |
 | `kelvin` | `{{ (state \| float + 273.15) \| round(2) }}` |
 
-In the panel the collapsed sections then read `fahrenheit = 68.0`, `kelvin = 293.15`.
+The attributes of the entity then contain `fahrenheit: 68.0` and `kelvin: 293.15`.

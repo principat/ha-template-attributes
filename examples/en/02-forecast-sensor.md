@@ -22,7 +22,7 @@ calculation with your own logic.
 | Device class | `temperature` |
 | Recalculation interval | `60` |
 
-**Attributes** (sidebar → Template Attributes)
+**Attributes** (the "Add attribute" step when creating, later in the helper options)
 
 | Name | Template |
 |---|---|
@@ -44,6 +44,6 @@ of objects, so you can use it in automations and dashboards (`state_attr(..., 'f
 
 Notes:
 
-- In the panel the section reads `forecast = [{"time": "...", "value": 20.0}, ...]`.
+- The attributes of the entity contain `forecast` as a list of objects with `time` and `value`.
 - Home Assistant stores state attributes in the database. Very long lists make every state change
   large - keep the number of steps reasonable.

@@ -12,11 +12,11 @@ liefern. `sensor.aussentemperatur` ist eine Beispiel-Entity-ID – eigene verwen
 | Einheit | `°C` |
 | Geräteklasse | `temperature` |
 
-**Attribute** (Seitenleiste → Template Attributes)
+**Attribute** (Schritt „Attribut hinzufügen“ beim Erstellen, später in den Optionen des Helfers)
 
 | Name | Template |
 |---|---|
 | `fahrenheit` | `{{ (state \| float * 9 / 5 + 32) \| round(1) }}` |
 | `kelvin` | `{{ (state \| float + 273.15) \| round(2) }}` |
 
-Im Panel lauten die eingeklappten Abschnitte dann `fahrenheit = 68.0`, `kelvin = 293.15`.
+In den Attributen der Entität stehen dann `fahrenheit: 68.0` und `kelvin: 293.15`.
